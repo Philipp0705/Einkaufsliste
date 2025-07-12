@@ -89,8 +89,8 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {liste.filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => (a.status === "done" ? 1 : -1)).map(item => (
-              <tr key={item.id}>
+            {liste.filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => (a.status === "done" ? 1 : -1)).map((item, index) => (
+              <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white" }}>
                 <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.fav === "yes" ? 'yellow' : 'default'}}onClick={() => {
                   const updateFav = liste.map((produkt) => (
                     produkt.id === item.id ? { ...produkt, fav: produkt.fav === "no" ? "yes" : "no" } : produkt
