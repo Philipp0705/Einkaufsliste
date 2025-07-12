@@ -1,6 +1,12 @@
 import { useState } from 'react'
 
-
+import Box from '@mui/material/Box';
+import Fab from '@mui/material/Fab';
+import AddIcon from '@mui/icons-material/Add';
+import TextField from '@mui/material/TextField';
+import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import StarIcon from '@mui/icons-material/Star';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 //Aufbau eines Produktes
 interface produkt {
@@ -28,36 +34,45 @@ export default function App() {
 
   return (
     <div>
+      <> {/* Text */}
+        <h1>Einkaufsliste</h1>
+      </>
+
       <> {/* Neue Artikel hinzufügen */}
-        <input type="text" placeholder="Artikel" value={artikel} onChange={(e) => {
-          const maxArtikel = e.target.value
-          if (maxArtikel.length <= 30) {
-            setArtikel(maxArtikel)
-          }
-        }} />
-        <input type="number" placeholder="Menge" value={menge} onChange={(e) => setMenge(e.target.value)} />
-        <input type="text" placeholder="Kategorie (optional)" value={kategorie} onChange={(e) => setKategorie(e.target.value)} />
-        <button onClick={() => {
-          setListe([...liste, { artikel: artikel, menge: Number(menge), id: id, status: "undone", kategorie: kategorie === "" ? "" : kategorie, fav: "no" }])
-          setId(prevId => prevId + 1)
-          setArtikel("")
-          setMenge("")
-        }}>Hinzufügen</button>
+        <Box sx={{ '& > :not(style)': { m: 1 } }}>
+          <TextField id="outlined-basic" label="Artikel" variant="outlined" type="text" value={artikel} onChange={(e) => {
+            const maxArtikel = e.target.value
+            if (maxArtikel.length <= 30) {
+              setArtikel(maxArtikel)
+            }
+          }} />
+          <TextField id="outlined-basic" label="Menge" helperText="Bei keiner Eingabe ist die Menge 1" variant="outlined" type="number" value={menge} onChange={(e) => setMenge(e.target.value)} />
+          <TextField id="outlined-basic" label="Kategorie (optional)" variant="outlined" type="text" value={kategorie} onChange={(e) => setKategorie(e.target.value)} />
+          <Fab sx={{ backgroundColor: 'lime' }} onClick={() => {
+            setListe([...liste, { artikel: artikel, menge: menge === "" ? 1 : Number(menge), id: id, status: "undone", kategorie: kategorie === "" ? "" : kategorie, fav: "no" }])
+            setId(prevId => prevId + 1)
+            setArtikel("")
+            setMenge("")
+            setKategorie("")
+          }}><AddIcon /></Fab>
+        </Box>
       </>
 
       <> {/* Nach Artikeln filtern */}
-        <br /><br />
-        <button onClick={() => {
-          if (enabledFilter === "enabled") {
-            setEnabledFilter("disabled")
-            setFilter("")
-            setKategorieFilter("")
-            setFavFilter("no")
-          } else setEnabledFilter("enabled")
-        }}>{enabledFilter === "enabled" ? "Deaktiviere" : "Aktiviere"} Filter</button>
-        {enabledFilter === "disabled" ? "" : <input type="text" placeholder="Filter nach Artikel" value={filter} onChange={(e) => setFilter(e.target.value)} />}
-        {enabledFilter === "disabled" ? "" : <input type="text" placeholder="Filter nach Kategorie" value={kategorieFilter} onChange={(e) => setKategorieFilter(e.target.value)} />}
-        {enabledFilter === "disabled" ? "" : <button onClick={() => { favFilter === "no" ? setFavFilter("yes") : setFavFilter("no") }}>⭐</button>}
+      <br />
+        <Box sx={{ '& > :not(style)': { m: 1 } }}>
+          <Fab sx={{ backgroundColor: enabledFilter === "enabled" ? 'lime' : 'default'}} onClick={() => {
+            if (enabledFilter === "enabled") {
+              setEnabledFilter("disabled")
+              setFilter("")
+              setKategorieFilter("")
+              setFavFilter("no")
+            } else setEnabledFilter("enabled")
+          }}><FilterAltIcon /></Fab>
+          {enabledFilter === "disabled" ? "" : <TextField id="outlined-basic" label="Filter nach Artikel" variant="outlined" type="text" value={filter} onChange={(e) => setFilter(e.target.value)} />}
+          {enabledFilter === "disabled" ? "" : <TextField id="outlined-basic" label="Filter nach Kategorie" variant="outlined" type="text" value={kategorieFilter} onChange={(e) => setKategorieFilter(e.target.value)} />}
+          {enabledFilter === "disabled" ? "" : <Fab sx={{ backgroundColor: favFilter === "yes" ? 'yellow' : 'default'}} onClick={() => { favFilter === "no" ? setFavFilter("yes") : setFavFilter("no") }}><StarIcon /></Fab>}
+        </Box>
       </>
 
       <> {/* Anzeige in Form einer Tabelle */}
@@ -65,32 +80,32 @@ export default function App() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ backgroundColor: "#dac5c5ff" }}>
-              <td style={{ textAlign: "center", padding: "8px" }}>Favoritisieren</td>
-              <td style={{ textAlign: "center", padding: "8px" }}>Artikel</td>
-              <td style={{ textAlign: "center", padding: "8px" }}>Menge</td>
-              <td style={{ textAlign: "center", padding: "8px" }}>Kategorie</td>
-              <td style={{ textAlign: "center", padding: "8px" }}>Status</td>
-              <td style={{ textAlign: "center", padding: "8px" }}>Löschen</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black'}}>Favoritisieren</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Artikel</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Menge</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Kategorie</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Status</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Löschen</td>
             </tr>
           </thead>
           <tbody>
             {liste.filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => (a.status === "done" ? 1 : -1)).map(item => (
               <tr key={item.id}>
-                <td style={{ textAlign: "center", padding: "8px" }}><button onClick={() => {
+                <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.fav === "yes" ? 'yellow' : 'default'}}onClick={() => {
                   const updateFav = liste.map((produkt) => (
                     produkt.id === item.id ? { ...produkt, fav: produkt.fav === "no" ? "yes" : "no" } : produkt
                   ))
                   setListe(updateFav)
-                }}>{item.fav === "no" ? "" : "⭐"}</button></td>
-                <td style={{ textAlign: "center", padding: "8px" }}>{item.artikel}</td>
-                <td style={{ textAlign: "center", padding: "8px" }}>{item.menge}</td>
-                <td style={{ textAlign: "center", padding: "8px" }}>{item.kategorie}</td>
-                <td style={{ textAlign: "center", padding: "8px" }}><button onClick={() => {
+                }}><StarIcon /></Fab></td>
+                <td style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>{item.artikel}</td>
+                <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}>{item.menge}</td>
+                <td style={{ textAlign: "center", padding: "8px", width: "20%", border: '1px solid black' }}>{item.kategorie}</td>
+                <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.status === "done" ? 'lime' : 'default' }} variant = "extended" onClick={() => {
                   setListe(prevListe => prevListe.map(artikel => artikel.id === item.id ? { ...artikel, status: artikel.status === "done" ? "undone" : "done" } : artikel))
-                }}>{item.status === "undone" ? "Ausstehend" : "Erledigt"}</button></td>
-                <td style={{ textAlign: "center", padding: "8px" }}><button onClick={() => {
+                }}>{item.status === "undone" ? "Ausstehend" : "Erledigt"}</Fab></td>
+                <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: "red" }} onClick={() => {
                   setListe(prevListe => prevListe.filter(artikel => artikel.id !== item.id))
-                }}>Löschen</button></td>
+                }}><DeleteIcon /></Fab></td>
               </tr>
             ))}
           </tbody>
