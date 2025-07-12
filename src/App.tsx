@@ -59,9 +59,9 @@ export default function App() {
       </>
 
       <> {/* Nach Artikeln filtern */}
-      <br />
+        <br />
         <Box sx={{ '& > :not(style)': { m: 1 } }}>
-          <Fab sx={{ backgroundColor: enabledFilter === "enabled" ? 'lime' : 'default'}} onClick={() => {
+          <Fab sx={{ backgroundColor: enabledFilter === "enabled" ? 'lime' : 'default' }} onClick={() => {
             if (enabledFilter === "enabled") {
               setEnabledFilter("disabled")
               setFilter("")
@@ -71,7 +71,7 @@ export default function App() {
           }}><FilterAltIcon /></Fab>
           {enabledFilter === "disabled" ? "" : <TextField id="outlined-basic" label="Filter nach Artikel" variant="outlined" type="text" value={filter} onChange={(e) => setFilter(e.target.value)} />}
           {enabledFilter === "disabled" ? "" : <TextField id="outlined-basic" label="Filter nach Kategorie" variant="outlined" type="text" value={kategorieFilter} onChange={(e) => setKategorieFilter(e.target.value)} />}
-          {enabledFilter === "disabled" ? "" : <Fab sx={{ backgroundColor: favFilter === "yes" ? 'yellow' : 'default'}} onClick={() => { favFilter === "no" ? setFavFilter("yes") : setFavFilter("no") }}><StarIcon /></Fab>}
+          {enabledFilter === "disabled" ? "" : <Fab sx={{ backgroundColor: favFilter === "yes" ? 'yellow' : 'default' }} onClick={() => { favFilter === "no" ? setFavFilter("yes") : setFavFilter("no") }}><StarIcon /></Fab>}
         </Box>
       </>
 
@@ -80,7 +80,7 @@ export default function App() {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ backgroundColor: "#dac5c5ff" }}>
-              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black'}}>Favoritisieren</td>
+              <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Favoritisieren</td>
               <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Artikel</td>
               <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Menge</td>
               <td style={{ textAlign: "center", padding: "8px", border: '2px solid black' }}>Kategorie</td>
@@ -89,9 +89,17 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {liste.filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => (a.status === "done" ? 1 : -1)).map((item, index) => (
+            {liste.filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => {
+              if (a.status !== b.status) {
+                return a.status === "undone" ? -1 : 1;
+              }
+              if (a.fav !== b.fav) {
+                return a.fav === "yes" ? -1 : 1;
+              }
+              return 0;
+            }).map((item, index) => (
               <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white" }}>
-                <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.fav === "yes" ? 'yellow' : 'default'}}onClick={() => {
+                <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.fav === "yes" ? 'yellow' : 'default' }} onClick={() => {
                   const updateFav = liste.map((produkt) => (
                     produkt.id === item.id ? { ...produkt, fav: produkt.fav === "no" ? "yes" : "no" } : produkt
                   ))
@@ -100,7 +108,7 @@ export default function App() {
                 <td style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>{item.artikel}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}>{item.menge}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "20%", border: '1px solid black' }}>{item.kategorie}</td>
-                <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.status === "done" ? 'lime' : 'default' }} variant = "extended" onClick={() => {
+                <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.status === "done" ? 'lime' : 'default' }} variant="extended" onClick={() => {
                   setListe(prevListe => prevListe.map(artikel => artikel.id === item.id ? { ...artikel, status: artikel.status === "done" ? "undone" : "done" } : artikel))
                 }}>{item.status === "undone" ? "Ausstehend" : "Erledigt"}</Fab></td>
                 <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: "red" }} onClick={() => {
