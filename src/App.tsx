@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 import Box from '@mui/material/Box';
 import Fab from '@mui/material/Fab';
@@ -24,13 +24,21 @@ export default function App() {
   const [artikel, setArtikel] = useState("")
   const [menge, setMenge] = useState("")
   const [kategorie, setKategorie] = useState("")
-  const [id, setId] = useState(1)
+  const [id, setId] = useState(Number())
 
   //Variablen für Filter
   const [filter, setFilter] = useState("")
   const [kategorieFilter, setKategorieFilter] = useState("")
   const [favFilter, setFavFilter] = useState("no")
   const [enabledFilter, setEnabledFilter] = useState("disabled")
+
+
+  useEffect(() => {
+    fetch('http://192.168.178.108:3001/items')
+      .then(response => response.json())
+      .then(jsonData => setListe(jsonData))
+
+  }, [])
 
   return (
     <div>
@@ -49,8 +57,15 @@ export default function App() {
           <TextField id="outlined-basic" label="Menge" helperText="Bei keiner Eingabe ist die Menge 1" variant="outlined" type="number" value={menge} onChange={(e) => setMenge(e.target.value)} />
           <TextField id="outlined-basic" label="Kategorie (optional)" variant="outlined" type="text" value={kategorie} onChange={(e) => setKategorie(e.target.value)} />
           <Fab sx={{ backgroundColor: 'lime' }} onClick={() => {
-            setListe([...liste, { artikel: artikel, menge: menge === "" ? 1 : Number(menge), id: id, status: "undone", kategorie: kategorie === "" ? "" : kategorie, fav: "no" }])
-            setId(prevId => prevId + 1)
+            const maxId = Math.max(...liste.map(item => item.id), 0) + 1
+            const neuerArtikel = { artikel: artikel, menge: menge === "" ? 1 : Number(menge), id: maxId, status: "undone", kategorie: kategorie === "" ? "" : kategorie, fav: "no" }
+            fetch('http://192.168.178.108:3001/items', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(neuerArtikel)
+            })
+            setListe([...liste, neuerArtikel])
+            setId(maxId)
             setArtikel("")
             setMenge("")
             setKategorie("")
@@ -100,19 +115,34 @@ export default function App() {
             }).map((item, index) => (
               <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white" }}>
                 <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.fav === "yes" ? 'yellow' : 'default' }} onClick={() => {
-                  const updateFav = liste.map((produkt) => (
-                    produkt.id === item.id ? { ...produkt, fav: produkt.fav === "no" ? "yes" : "no" } : produkt
-                  ))
-                  setListe(updateFav)
+                  const neuerArtikel = { artikel: item.artikel, menge: item.menge, status: item.status, kategorie: item.kategorie, fav: item.fav === "yes" ? "no" : "yes" }
+                  fetch(`http://192.168.178.108:3001/items/${item.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(neuerArtikel)
+                  })
+                    .then(res => res.json())
+                    .then(updated => { setListe(prev => prev.map(produkt => produkt.id === updated.id ? updated : produkt)) })
                 }}><StarIcon /></Fab></td>
                 <td style={{ textAlign: "center", padding: "8px", border: '1px solid black' }}>{item.artikel}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}>{item.menge}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "20%", border: '1px solid black' }}>{item.kategorie}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.status === "done" ? 'lime' : 'default' }} variant="extended" onClick={() => {
-                  setListe(prevListe => prevListe.map(artikel => artikel.id === item.id ? { ...artikel, status: artikel.status === "done" ? "undone" : "done" } : artikel))
+                  const neuerArtikel = { artikel: item.artikel, menge: item.menge, status: item.status === "done" ? "undone" : "done", kategorie: item.kategorie, fav: item.fav }
+                  fetch(`http://192.168.178.108:3001/items/${item.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(neuerArtikel)
+                  })
+                    .then(res => res.json())
+                    .then(updated => { setListe(prev => prev.map(produkt => produkt.id === updated.id ? updated : produkt)) })
                 }}>{item.status === "undone" ? "Ausstehend" : "Erledigt"}</Fab></td>
                 <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: "red" }} onClick={() => {
-                  setListe(prevListe => prevListe.filter(artikel => artikel.id !== item.id))
+                  fetch(`http://192.168.178.108:3001/items/${item.id}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                  })
+                  setListe(prev => prev.filter(produkt => produkt.id !== item.id))
                 }}><DeleteIcon /></Fab></td>
               </tr>
             ))}
