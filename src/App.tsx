@@ -16,6 +16,7 @@ interface produkt {
   kategorie: string,
   fav: string,
   id: number,
+  user: string,
 }
 
 export default function App() {
@@ -32,12 +33,17 @@ export default function App() {
   const [favFilter, setFavFilter] = useState("no")
   const [enabledFilter, setEnabledFilter] = useState("disabled")
 
+  //Variablen für den User
+  const [user, setUser] = useState("")
 
   useEffect(() => {
-    fetch('http://192.168.178.108:3001/items')
-      .then(response => response.json())
-      .then(jsonData => setListe(jsonData))
+    const intervalId = setInterval(() => {
+      fetch('http://192.168.178.108:3001/items')
+        .then(response => response.json())
+        .then(jsonData => setListe(jsonData))
+    }, 1000); // alle 3 Sekunden
 
+    return () => clearInterval(intervalId); // Aufräumen beim Unmount
   }, [])
 
   return (
@@ -46,7 +52,12 @@ export default function App() {
         <h1>Einkaufsliste</h1>
       </>
 
+      <>
+        <TextField id="outlined-basic" label="User" variant="outlined" type="number" value={user} onChange={(e) => setUser(e.target.value)} />
+      </>
+      
       <> {/* Neue Artikel hinzufügen */}
+      <br /><br /><br />
         <Box sx={{ '& > :not(style)': { m: 1 } }}>
           <TextField id="outlined-basic" label="Artikel" variant="outlined" type="text" value={artikel} onChange={(e) => {
             const maxArtikel = e.target.value
@@ -58,7 +69,7 @@ export default function App() {
           <TextField id="outlined-basic" label="Kategorie (optional)" variant="outlined" type="text" value={kategorie} onChange={(e) => setKategorie(e.target.value)} />
           <Fab sx={{ backgroundColor: 'lime' }} onClick={() => {
             const maxId = Math.max(...liste.map(item => item.id), 0) + 1
-            const neuerArtikel = { artikel: artikel, menge: menge === "" ? 1 : Number(menge), id: maxId, status: "undone", kategorie: kategorie === "" ? "" : kategorie, fav: "no" }
+            const neuerArtikel = { artikel: artikel, menge: menge === "" ? 1 : Number(menge), id: maxId, status: "undone", kategorie: kategorie === "" ? "" : kategorie, fav: "no", user: user }
             fetch('http://192.168.178.108:3001/items', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -104,7 +115,7 @@ export default function App() {
             </tr>
           </thead>
           <tbody>
-            {liste.filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => {
+            {liste.filter(item => item.user === user).filter(item => item.artikel.includes(filter)).filter(item => item.kategorie.includes(kategorieFilter)).filter(item => favFilter === "yes" ? item.fav === "yes" : true).sort((a, b) => {
               if (a.status !== b.status) {
                 return a.status === "undone" ? -1 : 1;
               }
@@ -115,7 +126,7 @@ export default function App() {
             }).map((item, index) => (
               <tr key={item.id} style={{ backgroundColor: index % 2 === 0 ? "#f2f2f2" : "white" }}>
                 <td style={{ textAlign: "center", padding: "8px", width: "5%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.fav === "yes" ? 'yellow' : 'default' }} onClick={() => {
-                  const neuerArtikel = { artikel: item.artikel, menge: item.menge, status: item.status, kategorie: item.kategorie, fav: item.fav === "yes" ? "no" : "yes" }
+                  const neuerArtikel = { artikel: item.artikel, menge: item.menge, status: item.status, kategorie: item.kategorie, fav: item.fav === "yes" ? "no" : "yes", user: item.user }
                   fetch(`http://192.168.178.108:3001/items/${item.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -128,7 +139,7 @@ export default function App() {
                 <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}>{item.menge}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "20%", border: '1px solid black' }}>{item.kategorie}</td>
                 <td style={{ textAlign: "center", padding: "8px", width: "10%", border: '1px solid black' }}><Fab sx={{ backgroundColor: item.status === "done" ? 'lime' : 'default' }} variant="extended" onClick={() => {
-                  const neuerArtikel = { artikel: item.artikel, menge: item.menge, status: item.status === "done" ? "undone" : "done", kategorie: item.kategorie, fav: item.fav }
+                  const neuerArtikel = { artikel: item.artikel, menge: item.menge, status: item.status === "done" ? "undone" : "done", kategorie: item.kategorie, fav: item.fav, user: item.user }
                   fetch(`http://192.168.178.108:3001/items/${item.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
